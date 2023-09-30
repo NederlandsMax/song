@@ -4,18 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>horstwessel</title>
+    <style>
+        /* hides the audio player */
+        audio {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <audio controls autoplay>
         <source src="https://archive.org/download/78_horst-wessel-lied-die-fahne-hoch_grosses-blas-orchester-chor-sa-sturm-33_gbia0363987a/HORST%20WESSEL%20LIED%20%28DIE%20FAHNE%20HOCH%20-%20GROSSES%20BLAS%20ORCHESTER.mp3" type="audio/mpeg">
-        your browser does not support the audio element, get a new browser lmfao
+        your browser does not support the audio element, get a new browser lmao
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 var audio = document.querySelector("audio");
                 audio.addEventListener("loadedmetadata", function() {
-                    // Set the desired starting time (in seconds)
-                    var startTime = 4; // 4 seconds
+                    // sets the desired starting time (in seconds)
+                    var startTime = 7; // 7 seconds
                     audio.currentTime = startTime;
+
+                    // shows the audio player after setting the currentTime
+                    audio.style.display = "block";
                 });
             });
         </script>
