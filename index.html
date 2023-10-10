@@ -3,31 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>horstwessel</title>
+    <title>Audio</title>
     <style>
-        /* hides the audio player */
-        audio {
-            visibility: hidden;
+        /* centres the audio player and the subtitle box */
+        #container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* styles the audio player container */
+        #audioPlayerContainer {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        /* styles the audio player controls */
+        #audioPlayer {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* styles the subtitle box */
+        #subtitleBox {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            color: #fff;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; /* Add transition effects */
+            transform: translateY(20px); /* Initial position */
+        }
+
+        /* Style the subtitle text */
+        #subtitle {
+            transition: opacity 0.3s ease-in-out; /* adds a subtle transition effect for opacity */
         }
     </style>
 </head>
 <body>
-    <audio controls autoplay>
-        <source src="https://archive.org/download/78_horst-wessel-lied-die-fahne-hoch_grosses-blas-orchester-chor-sa-sturm-33_gbia0363987a/HORST%20WESSEL%20LIED%20%28DIE%20FAHNE%20HOCH%20-%20GROSSES%20BLAS%20ORCHESTER.mp3" type="audio/mpeg">
-        your browser does not support the audio element, get a new browser lmao
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                var audio = document.querySelector("audio");
-                audio.addEventListener("loadedmetadata", function() {
-                    // sets the desired starting time (in seconds)
-                    var startTime = 7; // 7 seconds
-                    audio.currentTime = startTime;
+    <div id="container">
+        <div id="audioPlayerContainer">
+            <audio id="audioPlayer" controls>
+                <source src="Kranz.mp3" type="audio/mpeg">
+                your browser does not support the audio element lol
+            </audio>
+        </div>
+        
+        <div id="subtitleBox">
+            <p id="subtitle">Loading subtitles...</p>
+        </div>
+    </div>
 
-                    // shows the audio player after setting the currentTime
-                    audio.style.display = "block";
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var audioPlayer = document.getElementById("audioPlayer");
+            var subtitle = document.getElementById("subtitle");
+            var subtitleBox = document.getElementById("subtitleBox");
+            var currentSubtitleIndex = 0; // Initialize currentSubtitleIndex
+            
+            // should fetch and parse the SRT subtitles file
+            fetch("subtitles.srt")
+                .then(response => response.text())
+                .then(data => {
+                    var subtitles = data.split(/\n\s*\n/);
+
+                    // function to display subtitles with a transition effect
+                    function displaySubtitle() {
+                        if (currentSubtitleIndex < subtitles.length) {
+                            var subtitleParts = subtitles[currentSubtitleIndex].split("\n");
+                            subtitle.textContent = subtitleParts[2];
+                            currentSubtitleIndex++;
+                            subtitle.style.opacity = 1; // Make the subtitle text visible with a transition
+                            subtitleBox.style.opacity = 1; // Make the subtitle box visible with a transition
+                            subtitleBox.style.transform = "translateY(0)"; // moves the subtitle box to its final position
+                        } else {
+                            subtitle.textContent = "";
+                            subtitle.style.opacity = 0; // Hide the subtitle text with a transition
+                            subtitleBox.style.opacity = 0; // Hide the subtitle box with a transition
+                            subtitleBox.style.transform = "translateY(20px)"; // Move subtitle box back to initial position
+                        }
+                    }
+
+                    // listens for time updates on the audio player
+                    audioPlayer.addEventListener("timeupdate", function() {
+                        var currentTime = audioPlayer.currentTime;
+
+                        while (currentSubtitleIndex < subtitles.length) {
+                            var subtitleParts = subtitles[currentSubtitleIndex].split("\n");
+                            var startTime = parseTime(subtitleParts[1].split(" --> ")[0]);
+                            var endTime = parseTime(subtitleParts[1].split(" --> ")[1]);
+
+                            if (currentTime >= startTime && currentTime <= endTime) {
+                                displaySubtitle();
+                                break;
+                            } else if (currentTime < startTime) {
+                                break;
+                            }
+
+                            currentSubtitleIndex++;
+                        }
+                    });
+
+                    // listener for when the audio ends (reset currentSubtitleIndex)
+                    audioPlayer.addEventListener("ended", function() {
+                        currentSubtitleIndex = 0;
+                        subtitle.textContent = ""; // Clear subtitle text
+                        subtitle.style.opacity = 0; // Hide the subtitle text with a transition
+                        subtitleBox.style.opacity = 0; // Hide the subtitle box with a transition
+                        subtitleBox.style.transform = "translateY(20px)"; // Move subtitle box back to initial position
+                    });
+
+                    // parses time in SRT format (00:00:00,000)
+                    function parseTime(timeString) {
+                        var timeParts = timeString.split(":");
+                        var hours = parseInt(timeParts[0], 10);
+                        var minutes = parseInt(timeParts[1], 10);
+                        var seconds = parseFloat(timeParts[2].replace(",", "."));
+                        return hours * 3600 + minutes * 60 + seconds;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading subtitles:", error);
+                    subtitle.textContent = "Subtitles not available";
+                    subtitle.style.opacity = 0; // Hide the subtitle text with a transition
+                    subtitleBox.style.opacity = 0; // Hide the subtitle box with a transition
+                    subtitleBox.style.transform = "translateY(20px)"; // moves the subtitle box back to initial position
                 });
-            });
-        </script>
-    </audio>
+        });
+    </script>
 </body>
 </html>
